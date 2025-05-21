@@ -1,19 +1,18 @@
 export default 123
-export const str = 'hello'
-export const arr = ['키위','사과','토마토']
-export const func = (a,b)=>{
+export const str = "hello"
+export const arr = ["kiwi", "apple", "tomato"]
+//함수 hap파라미터 변수들은 호출될 때 초기화가 된다.
+//값에 의한 호출이다.
+export const hap = (a,b) => {
   return a+b
-}
-
+}//end of hap
 export class Sonata{
-  constructor(){ //생성자 함수
+  constructor(){//생성자 함수
     this.wheelNum = 4
     this.speed = 0
-    this.carColor = 'red'
+    this.carColor = "red"
   }
-  speedUp = ()=> {
+  speedUp = () => {
     this.speed = this.speed + 1
-  return this.speed
-
-  } 
-}
+  }
+}//end of Sonata

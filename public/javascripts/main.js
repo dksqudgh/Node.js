@@ -1,16 +1,14 @@
-import number,{str,arr, Sonata,func} from './module'    //import {사용할 오브젝트} from '파일위치'
+import number, {str, arr, hap, Sonata} from './module'
 console.log(number);
 console.log(str);
 console.log(arr);
-console.log(func(2,5));
+console.log(hap(1,2));
 const myCar = new Sonata();
-
-console.log(myCar.wheelNum);
-console.log(myCar.speed);
-console.log(myCar.speedUp());
-
-console.log(myCar.speedUp());
-
-console.log(myCar.speedUp());
-
-console.log(myCar.speedUp());
+console.log(myCar.wheelNum);//4
+console.log(myCar.speed);//0
+myCar.speedUp()
+console.log(myCar.speed);//1
+myCar.speedUp()
+console.log(myCar.speed);//2
+myCar.speedUp()
+console.log(myCar.speed);//3
