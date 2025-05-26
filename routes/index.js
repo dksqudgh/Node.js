@@ -24,4 +24,27 @@ router.get('/home', function(req, res, next){
 router.get('/login', function(req, res, next) {
   res.render('index', { title: '로그인', pageName: 'auth/login.ejs', email: null });
 });
+
+router.get('/auth/kakao/callback',async(req,res,next)=>{
+  //카카오 서버에서 카카오 고르인 이미지 버튼으로 요청ㅇ시 붙인 redict_url에 
+  //쿼리스트링으로 인증코드를 보내준다.
+  console.log(req.query.code);
+  const code = req.query.code
+  try {
+    //Access Token 가져오기
+    const res1 = await axios.post('https://kauth.kakao.com/oauth/token', null, {
+      headers: {
+        'Content-Type': 'authorization_code'
+      },
+      params:{  
+      'grant_type': 'authorization_code',
+        'client_id': process.env.KAKAO_CLIENT_ID,
+        'redirect_uri': process.env.KAKAO_REDIRECT_URI,
+        'code': code
+      }
+    });
+  } catch (error) {
+    
+  }
+})
 module.exports = router;
