@@ -35,6 +35,12 @@ router.get('/auth/kakao/callback', async(req,res, next)=>{
   try {
     //Access Token 가져오기
     //Access Token으로 사용자 프로필 가져오기
+    //axios라이브러리사용 - 비동기처리
+    //GET:조회, POST:등록, PUT:수정, DELETE:삭제
+    //GET:조회는 쿼리스트링 >> 주소창에 노출 >> 여기에 비번이 있다? >> 보안취약
+    //GET:링크제공, 단위테스트 가능
+    //POST:등록은 바디에 담아서 >> 주소창에 노출되지 않는다. >> 인터셉트 절대 당하지 않음 >> 보안강화
+    //POST:링크불가 , 단위테스트 불가
     const res1 = await axios.post('https://kauth.kakao.com/oauth/token', null, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
@@ -48,7 +54,25 @@ router.get('/auth/kakao/callback', async(req,res, next)=>{
     })
     const accessToken = res1.data.access_token
     console.log('Access Token:', accessToken);
-  } catch (error) {
+
+
+    const res2 = await axios.post('https://kapi.kakao.com/v2/user/me',null,
+      {headers:
+    {
+      Authorization:'Bearer ' + accessToken,
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+    } 
+})
+console.log(res2.data);
+const nickname = res2.data.properties.nickname
+const email = res2.data.kakao_account.email
+console.log(`닉네임:${nickname}, 이메일:${email}`);
+req.session.email = email //세션에 이메일 저장
+req.session.nickname = nickname //세션에 닉네임 저장
+req.session.save(()=>{
+  res.redirect('/') //홈으로 이동
+})
+}catch (error) {
     console.error('에러',error);
   }
 })

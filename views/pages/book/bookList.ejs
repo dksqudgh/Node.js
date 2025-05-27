@@ -3,7 +3,7 @@
   <!-- 검색 키워드 전송하기 -->
     <form name="frm">
       <div class="input-group">
-        <input type="text" name="query" class="form-control" value="자바" />
+        <input type="text" name="query" class="form-control" value="" />
         <button class="btn btn-success">검색</button>
       </div>
     </form>
@@ -21,20 +21,24 @@
   <div class="col-6 col-md-4 col-lg-2">
     <div class="card my-2">
       <div class="card-body text-center">
-        <img src="{{image thumbnail}}" alt="도서이미지" style="cursor:pointer; width:80%" />
+        <img src="{{image thumbnail}}" index = "{{@index}}" alt="도서이미지" style="cursor:pointer; width:80%"/>
         <div class="ellipsis mt-2">{{title}}</div>
       </div>
       <div class="card-footer text-center" style="font-size:0.9rem;">
-        {{price}}
+        {{format price}}
         <span class="cart ms-3" book="{{book @this}}" style="cursor:pointer; color:green;">CART</span>
       </div>
     </div>
+    <%-include("bookModal.ejs") %>
   </div>
   {{/each}}
 </script>
 <!-- 도서 목록 템플릿 -->
 <!-- Handlebars헬퍼등록-->
- <script>
+<script>
+  Handlebars.registerHelper("format", function(price) {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원'; // 천단위 콤마찍기 (정규식 사용) 정규식 설명: \B는 단어 경계가 아닌 곳을 의미, (?=(\d{3})+(?!\d))는 뒤에 3의 배수가 오는지 확인하는 조건
+  });
   Handlebars.registerHelper('image',function(thum){
     return thum || 'https://placehold.co/120x174'
   })
@@ -42,7 +46,7 @@
   Handlebars.registerHelper('book',function(book){
     return JSON.stringify(book)
   })
- </script>
+</script>
 <!-- 페이지 네비게이션 버튼 -->
 <div class="text-center mt-2">
   <button class="btn btn-primary btn-sm px-5" id="prev">이전</button>
@@ -57,8 +61,65 @@
   import { getDatabase } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-database.js"
   const db = getDatabase(app)
   console.log(db);
+  let page = 1
+  let query
+  const listEl = document.querySelector('#list_book')
+  const pageEl = document.querySelector('#page')
+  const prevBtn = document.querySelector('#prev')
+  const nextBtn = document.querySelector('#next')
+
+  //페이지에 대한 상태값이 바뀌면 화면도 다시 렌더링 해야 한다.
+  //다시 렌더링 >> getBookList()
+  //페이지 네비게이션
+  nextBtn.addEventListener('click', () => {
+    console.log('다음 페이지 클릭');
+    page++ //페이지 증가
+    getBookList()
+  })
+  prevBtn.addEventListener('click', () => {
+    console.log('이전 페이지 클릭');
+    page-- //페이지 감소
+    getBookList()
+  })
+
+  //listEl은 핸들바스로 가져온 목록 전체
+  //목록 영역 출력 이벤트(장바구니 & 도서 이미지 모달)
+  listEl.addEventListener('click', (e) => {
+    //장바구니에 담기
+    console.log('도서목록 클릭 이벤트 호출');
+    const target = e.target
+    console.log(target.tagName); //태그이름이 IMG 대문자로 출력됨
+    
+    if(target.tagName === 'SPAN') {
+      //장바구니에 담기
+      const book = JSON.parse(target.getAttribute('book'))
+      console.log(book);
+      //장바구니에 담기
+      
+
+    }
+
+    else if (target.tagName === 'IMG') {
+      const idx = JSON.parse(target.getAttribute('index'))
+      console.log(idx); //사용자가 선택한 도서 이미지의 식별자 가져오기
+      //사용자가 선택한 도서의 모달 인덱스 접근
+      const modalEl = document.querySelector(`#modal${idx}`)
+      console.log(modalEl);
+      if(modalEl){
+        const modal = new bootstrap.Modal(modalEl)
+        modal.show()
+      }
+    }//end of img
+  })
+  //검색 폼 제출하기
+  document.forms['frm'].addEventListener('submit', (e) => {
+    e.preventDefault() //submit이슈 방지
+    query = document.forms['frm'].query.value //사용자가 입력한 책제목 키워드 저장하기
+    console.log(query);
+    page = 1 //페이지 초기화
+    getBookList() //도서목록 조회하기
+  })
   /*
-  검색 폼 제출하기
   사용자가 입력한 책제목 키워드 저장하기 - 전역적으로 사용 - 변수 선언 위치
 
 
@@ -66,13 +127,12 @@
   카카오 도서검색 url요청하기 - 비동기 처리
   
   */
-  const lisetEl = document.querySelector('#list_book')
   const getBookList = () => {
-    const book_url = new URL(`https://dapi.kakao.com/v3/search/book?target=title&query=react&size=2&page=5`) 
+    const book_url = new URL(`https://dapi.kakao.com/v3/search/book`) 
     book_url.searchParams.set('target','title')
-    book_url.searchParams.set('query','구의 증명')
-    book_url.searchParams.set('page', 5)
-    book_url.searchParams.set('size', 2)
+    book_url.searchParams.set('query', query)
+    book_url.searchParams.set('page', page)
+    book_url.searchParams.set('size', 6)
 
 
 //카카오서버와 통신하기
@@ -81,8 +141,17 @@
       })
       .then((res) => res.json())
       .then((result) => {
-        const imsi = Handlebars.conpile(document.querySelector('#temp-book').innerHTML)
-        lisetEl.innerHTML = imsi(result)
+        const imsi = Handlebars.compile(document.querySelector('#temp-book').innerHTML)
+        listEl.innerHTML = imsi(result)
+        const isEnd = result.meta.is_end;
+        const total = result.meta.total_count;
+        const last = Math.ceil(total / 6)
+        console.log(`${isEnd} / ${total} / ${last}`);
+
+        pageEl.textContent = `${page}/${last}` //페이지 상태값 출력하기
+        //만일 마지막 페이지라면 다음버튼을 비활성화
+        prevBtn.disabled = (page === 1) //첫페이지라면 이전버튼 비활성화
+        nextBtn.disabled = isEnd //마지막 페이지라면 다음버튼 비활성화
       })
       .catch((error) => console.error(error));
   }
