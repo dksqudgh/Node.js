@@ -1,12 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
 const firebaseConfig = {
-  apiKey: "AIzaSyC-L1F_gW4rj75DXfvlce7y77bQlwz0yAM",
-  authDomain: "kosmo250520.firebaseapp.com",
-  databaseURL: "https://kosmo250520-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "kosmo250520",
-  storageBucket: "kosmo250520.firebasestorage.app",
-  messagingSenderId: "866099520808",
-  appId: "1:866099520808:web:797d61891d717ce2f79c1d"
+  apiKey: "AIzaSyBnbbKq3Sutrv-wp8yc46D9KSKHtB6KQ9s",
+  authDomain: "bookapp7213.firebaseapp.com",
+  databaseURL: "https://bookapp7213-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bookapp7213",
+  storageBucket: "bookapp7213.firebasestorage.app",
+  messagingSenderId: "453880308052",
+  appId: "1:453880308052:web:501407a90fa77135ede8c1"
 };
 
 // Initialize Firebase
