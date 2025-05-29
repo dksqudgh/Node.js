@@ -26,6 +26,8 @@ router.get('/login', function(req, res, next) {
   res.render('index', { title: '로그인', pageName: 'auth/login.ejs', email: null });
 });
 
+
+
 /* 카카오 로그인 Redirect설정 */
 router.get('/auth/kakao/callback', async(req,res, next)=>{
   //카카오 서버에서 카카오 로그인 이미지 버튼으로 요청시 붙인 redirect_url에

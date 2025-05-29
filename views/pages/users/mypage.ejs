@@ -26,29 +26,29 @@
     </div>
 </script>
 
-<script type = 'module'>
-  import { app } from '/javascripts/firebase.js'
-  import {getFirestore,doc,getDoc} from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js"
-  const db = getFirestore(app)
-  console.log(db);
-  //사용자 정보 샘플 
-  let user = {
-    name: "홍길동",
-    photo: "https://placehold.co/200x200",
-    address: "서울시 강남구 역삼동",
-    phone: "010-1234-5678"
-  }
-//FireStore에서 가져온 정보 출력해보기
-//키는 로그인시 발급되는 uid값으로 한다
-  const uid = localStorage.getItem("uid")
-  const snapshot = await getDoc(doc(db, `member/${uid}`))
-  console.log(snapshot.data());
-  user = snapshot.data()
+<script type='module'>
+    import { app } from '/javascripts/firebase.js'
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js"
+    const db = getFirestore(app)
+    console.log(db);
+    //사용자 정보 샘플 
+    let user = {
+        name: "홍길동",
+        photo: "https://placehold.co/200x200",
+        address: "서울시 강남구 역삼동",
+        phone: "010-1234-5678"
+    }
+    //FireStore에서 가져온 정보 출력해보기
+    //키는 로그인시 발급되는 uid값으로 한다
+    const uid = localStorage.getItem("uid")
+    const snapshot = await getDoc(doc(db, `member/${uid}`))
+    console.log(snapshot.data());
+    user = snapshot.data()
 
-  const temp_mypage = document.querySelector("#temp_mypage").innerHTML;
-  const template = Handlebars.compile(temp_mypage);
-  const html = template(user)
-  document.querySelector("#dmypage").innerHTML = html;
+    const temp_mypage = document.querySelector("#temp_mypage").innerHTML;
+    const template = Handlebars.compile(temp_mypage);
+    const html = template(user)
+    document.querySelector("#dmypage").innerHTML = html;
 </script>
 
 
