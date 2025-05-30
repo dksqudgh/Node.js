@@ -1,24 +1,52 @@
 <div class="row my-5">
   <div class="col">
     <h1 class="text-center mb-5">장바구니</h1>
-    <div id="cart_list">ㅁㄴㅇㄹ</div>
+    <div id="cart_list">핸들바스스크립트와 데이터가 머지된 코드 삽입</div>
   </div>
 </div>
 <!--장바구니 템플릿-->
 <script id="temp" type="text/x-handlebars-template">
   <table class="table table-striped">
+    {{#each this}}
       <tr>
+        <td><img src="{{#if thumbnail}}{{thumbnail}}{{else}}/images/placeholder.jpg{{/if}}" alt="{{title}}" /></td>
           <td>{{title}}</td>
           <td>{{authors}}</td>
           <td>{{price}}</td>
-          <td><button class="btn btn-danger btn-sm" data-isbn="{{ isbn }}">삭제</button></td>
+          <td><button class="btn btn-danger btn-sm" id = "deleteBtn"data-isbn="{{ isbn }}">삭제</button></td>
       </tr>
+    {{/each}}
   </table>
 </script>
 <script type="module">
-  console.log('ㅇㄱ');
-  const cartList = document.querySelector("#cart_list");
-  cartList.innerHTML = `<h1>장바구니목록 처리</h1>`;
+  import { app } from '/javascripts/firebase.js'
+  import { getDatabase, onValue, remove, ref } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-database.js"
+  const db = getDatabase(app)
+  const uid = localStorage.getItem('uid')
+
+  // 장바구니 목록을 가져오기
+  onValue(ref(db, `cart/${uid}`), (snapshot) => {
+    //꺼내온 데이터를 핸들바스와 머지해야 하므로 반복문이 필요함
+    //그래서 데이터를 담을 배열을 하나 선언
+    let rows =[];
+    snapshot.forEach((item) => {
+      rows.push({key: item.key, ...item.val()});
+    });
+    const temp = Handlebars.compile(document.querySelector('#temp').innerHTML)
+    document.querySelector('#cart_list').innerHTML = temp(rows)
+  });
+  const Delcart = document.querySelector('#cart_list');
+  Delcart.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-danger')) {
+      const DELtitle = e.target.getAttribute('data-title');
+      const isbn = e.target.getAttribute('data-isbn');
+      alert(`${DELtitle} 도서를 장바구니에서 삭제하시겠습니까?`);
+      remove(ref(db, `cart/${uid}/${isbn}`))
+        
+      console.log(temp);
+    }
+  });
+
 </script>
 
 

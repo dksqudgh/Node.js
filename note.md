@@ -21,3 +21,19 @@
  ### 이미지 업로드 - 클라우디너리
 upload preset - express
                 dssc6slod
+
+
+1. 데이터베이스 참조 가져오기
+import { getDatabase } from "firebase/database";
+const database = getDatabase();
+
+2. 장바구니 담기 - 데이터 쓰기
+set(ref(db, 'cart/${uid}/${book.isbn}), book);
+
+3. 장바구니 목록 가져오기 - 데이터 읽기
+const starCountRef = ref(db, 'posts/' + postId + '/starCount');
+onValue(ref(db, `cart/${uid}`), (snapshot) => {
+	let rows=[]
+snapshot.forEach(row => {
+ rows.push(key: row.key, ...row.val())
+})})

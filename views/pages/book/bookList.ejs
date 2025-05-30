@@ -1,13 +1,13 @@
-<div class = "row mt -5 justify-content-end">
-  <div class = "col-6 col-md-4">
-  <!-- 검색 키워드 전송하기 -->
-    <form name="frm">
-      <div class="input-group">
-        <input type="text" name="query" class="form-control" value="" />
-        <button class="btn btn-success">검색</button>
-      </div>
-    </form>
-  <!-- 검색 키워드 전송하기 -->
+<div class="row mt-5 justify-content-end">
+  <div class="col-6 col-md-4">
+<!-- 검색 키워드 전송하기  -->
+      <form name="frm">
+        <div class="input-group">
+          <input type="text" name="query" class="form-control" value="파이썬"/>
+          <button class="btn btn-success">검색</button>
+        </div>
+      </form>
+<!-- 검색 키워드 전송하기  -->
   </div>
 </div>
 <hr />
@@ -18,32 +18,33 @@
 <!-- 도서 목록 템플릿 -->
 <script type="text/x-handlebars-template" id="temp-book">
   {{#each documents}}
-  <div class="col-6 col-md-4 col-lg-2">
-    <div class="card my-2">
-      <div class="card-body text-center">
-        <img src="{{image thumbnail}}" index = "{{@index}}" alt="도서이미지" style="cursor:pointer; width:80%"/>
-        <div class="ellipsis mt-2">{{title}}</div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="card my-2">
+        <div class="card-body text-center">
+          <img src="{{image thumbnail}}" index="{{@index}}" alt="도서이미지" style="cursor:pointer; width:80%" />
+          <div class="ellipsis mt-2">{{title}}</div>
+        </div>
+        <div class="card-footer text-center" style="font-size:0.9rem;">
+          {{format price}}
+          <span class="cart ms-3" book="{{book @this}}" style="cursor:pointer; color:green;">CART</span>
+        </div>
       </div>
-      <div class="card-footer text-center" style="font-size:0.9rem;">
-        {{format price}}
-        <span class="cart ms-3" book="{{book @this}}" style="cursor:pointer; color:green;">CART</span>
-      </div>
+
+      <%- include("bookModal.ejs") %>
+
     </div>
-    <%-include("bookModal.ejs") %>
-  </div>
   {{/each}}
 </script>
 <!-- 도서 목록 템플릿 -->
-<!-- Handlebars헬퍼등록-->
+<!-- Handlebards 헬퍼 등록 -->
 <script>
   Handlebars.registerHelper("format", function(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원'; // 천단위 콤마찍기 (정규식 사용) 정규식 설명: \B는 단어 경계가 아닌 곳을 의미, (?=(\d{3})+(?!\d))는 뒤에 3의 배수가 오는지 확인하는 조건
-  });
-  Handlebars.registerHelper('image',function(thum){
-    return thum || 'https://placehold.co/120x174'
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
+  });  
+  Handlebars.registerHelper("image", function(thum){
+    return thum || "https://placehold.co/120x174"
   })
-
-  Handlebars.registerHelper('book',function(book){
+  Handlebars.registerHelper("book", function(book){
     return JSON.stringify(book)
   })
 </script>
@@ -58,106 +59,108 @@
 <script type="module">
   //파이어베이스 API활용 - 장바구니 구현, 공지사항 구현, 게시판구현
   import { app } from '/javascripts/firebase.js'
-  import { getDatabase } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-database.js"
+  import { getDatabase, set, ref } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-database.js"
   const db = getDatabase(app)
+  const uid = localStorage.getItem('uid') //로그인한 사용자 식별자
   console.log(db);
+  //페이지 상태 값을 담음
   let page = 1
   let query
   const listEl = document.querySelector('#list_book')
-  const pageEl = document.querySelector('#page')
-  const prevBtn = document.querySelector('#prev')
-  const nextBtn = document.querySelector('#next')
-
-  //페이지에 대한 상태값이 바뀌면 화면도 다시 렌더링 해야 한다.
-  //다시 렌더링 >> getBookList()
-  //페이지 네비게이션
-  nextBtn.addEventListener('click', () => {
-    console.log('다음 페이지 클릭');
-    page++ //페이지 증가
-    getBookList()
-  })
-  prevBtn.addEventListener('click', () => {
-    console.log('이전 페이지 클릭');
-    page-- //페이지 감소
-    getBookList()
-  })
-
   //listEl은 핸들바스로 가져온 목록 전체
-  //목록 영역 출력 이벤트(장바구니 & 도서 이미지 모달)
-  listEl.addEventListener('click', (e) => {
-    //장바구니에 담기
+  //목록 영역 클릭 이벤트(장바구니 & 도서 이미지 모달)
+  listEl.addEventListener('click', async(e)=>{
     console.log('도서목록 클릭 이벤트 호출');
+    //이벤트 소스 타겟
+    //타겟에 따라서 장바구니 처리와 이미지 클릭 모달 처리를 해야 한다.- 분기
     const target = e.target
-    console.log(target.tagName); //태그이름이 IMG 대문자로 출력됨
-    
-    if(target.tagName === 'SPAN') {
-      //장바구니에 담기
-      const book = JSON.parse(target.getAttribute('book'))
-      console.log(book);
-      //장바구니에 담기
-      
-
-    }
-
-    else if (target.tagName === 'IMG') {
-      const idx = JSON.parse(target.getAttribute('index'))
-      console.log(idx); //사용자가 선택한 도서 이미지의 식별자 가져오기
+    console.log(target.tagName);//IMG, DIV 대문자로 출력됨 - 태그이름
+    //CART글자를 클릭한거야?
+    if(target.classList.contains('cart')){
+      console.log('CART클릭했을 때');
+      if(uid){
+        const book = JSON.parse(target.getAttribute('book'))
+        await set(ref(db, `cart/${uid}/${book.isbn}`), book)
+        alert('장바구니에 등록되었습니다.')
+      }else{
+        window.location.href = '/login'
+      }//end of inner if
+    }//end of outter if
+    else if('IMG' === target.tagName){//부트스트랩 제공하는 모달 활용연습
+      const idx =target.getAttribute('index')
+      console.log(idx);//사용자 선택한 도서 이미지의 식별자 가져오기
       //사용자가 선택한 도서의 모달 인덱스 접근
       const modalEl = document.querySelector(`#modal${idx}`)
       console.log(modalEl);
       if(modalEl){
+        //bootstrap은 부트스트랩이 제공하는 객체임
         const modal = new bootstrap.Modal(modalEl)
         modal.show()
       }
-    }//end of img
+    }//end of image
   })
   //검색 폼 제출하기
-  document.forms['frm'].addEventListener('submit', (e) => {
-    e.preventDefault() //submit이슈 방지
-    query = document.forms['frm'].query.value //사용자가 입력한 책제목 키워드 저장하기
+  document.forms['frm'].addEventListener('submit',(e)=>{
+    e.preventDefault() //submit이슈 방어코드
+    //id가 아니라 name을 접근할 때
+    query = document.forms['frm'].query.value 
     console.log(query);
-    page = 1 //페이지 초기화
-    getBookList() //도서목록 조회하기
+    getBookList()
   })
-  /*
-  사용자가 입력한 책제목 키워드 저장하기 - 전역적으로 사용 - 변수 선언 위치
+  //사용자가 입력한 책제목 키워드 저장하기 - 전역적으로 사용 - 변수 선언 위치
 
+  //도서검색 리스트 조회 함수 구현
+  //카카오 도서검색 URL요청하기 - 비동기 처리
+  const lisetEl = document.querySelector('#list_book')
+  const pageEl = document.querySelector('#page') //현재 위치 상태값
+  const prevBtn = document.querySelector('#prev') //이전버튼
+  const nextBtn = document.querySelector('#next') //다음버튼
 
-  도서검색 리스트 조회 함수 구현
-  카카오 도서검색 url요청하기 - 비동기 처리
-  
-  */
+  //페이지에 대한 상태값이 바뀌면 화면도 다시 렌더링 해야 한다.
+  //다시 렌더링 -> getBookList -> 검색결과 출력할 때
+  //페이지 네비게이션
+  nextBtn.addEventListener('click', ()=> {
+    page++
+    getBookList()
+  })
+  prevBtn.addEventListener('click', ()=> {
+    page--
+    getBookList()
+  })
+
   const getBookList = () => {
-    const book_url = new URL(`https://dapi.kakao.com/v3/search/book`) 
-    book_url.searchParams.set('target','title')
+    const book_url = new URL('https://dapi.kakao.com/v3/search/book')
+    book_url.searchParams.set('target', 'title')
     book_url.searchParams.set('query', query)
     book_url.searchParams.set('page', page)
     book_url.searchParams.set('size', 6)
 
+    //카카오 서버와 통신하기
+    fetch(book_url, {
+      headers: { 'Authorization':'KakaoAK d26f7852e992640b68e97babc62004b7' }
+    })
+    .then(res => res.json())
+    .then(result => {
+      console.log(result);
+      const imsi = Handlebars.compile(document.querySelector('#temp-book').innerHTML)
+      lisetEl.innerHTML = imsi(result)
 
-//카카오서버와 통신하기
-      fetch(book_url, {
-        headers: {'Authorization':'KakaoAK d26f7852e992640b68e97babc62004b7'}
-      })
-      .then((res) => res.json())
-      .then((result) => {
-        const imsi = Handlebars.compile(document.querySelector('#temp-book').innerHTML)
-        listEl.innerHTML = imsi(result)
-        const isEnd = result.meta.is_end;
-        const total = result.meta.total_count;
-        const last = Math.ceil(total / 6)
-        console.log(`${isEnd} / ${total} / ${last}`);
+      //페이징 처리시에 필요한 메타 정보 담기
+      const isEnd = result.meta.is_end;
+      const total = result.meta.total_count;
+      const last = Math.ceil(total / 6)
+      console.log(`${isEnd}, ${total} , ${last}`);
 
-        pageEl.textContent = `${page}/${last}` //페이지 상태값 출력하기
-        //만일 마지막 페이지라면 다음버튼을 비활성화
-        prevBtn.disabled = (page === 1) //첫페이지라면 이전버튼 비활성화
-        nextBtn.disabled = isEnd //마지막 페이지라면 다음버튼 비활성화
-      })
-      .catch((error) => console.error(error));
-  }
+      pageEl.textContent = `${page}/${last}`
+      //만일 마지막 페이지라면 다음버튼은 비활성화 한다.
+      //현재가 1페이지라면 이전페이지는 없다. - 비활성화 처리
+      prevBtn.disabled = (page === 1)
+      nextBtn.disabled = isEnd
+    })
+    .catch((error) => console.error(error));
 
+  }//end of getBookList
   getBookList()
-
 
 </script>
 <!-- 데이터 가져오기[Back-End] -->
